@@ -19,6 +19,15 @@ export interface RestRequestOptions {
   limit?: number;
 
   /**
+   * The locale code to use when querying for content.
+   *
+   * If you query for system entries like spaces, environments, locales, content types, etc. this should be set to the
+   * default locale of the space. Otherwise, the query may not return all results if properties have not been
+   * translated.
+   */
+  locale?: string;
+
+  /**
    * The content type to filter by.
    * Providing this will provide a response that's typed more strictly.
    */
@@ -373,7 +382,7 @@ export class ContentCloudRestClient {
     type: TypeName,
     data: ContentUserDataTypes[TypeName]["Update"],
   ): Promise<ContentUserDataTypes[TypeName]["Entry"]> {
-    return await this.system.post(`/entries/${contentId}/user_data/${type}`, data);
+    return await this.system.post(`/entries/${contentId}/user_data/${type}`, { fields: data });
   }
 
   /**
@@ -411,6 +420,10 @@ export class ContentCloudRestClient {
     },
   ): Promise<RestListResponse> {
     const params: Record<string, any> = {};
+
+    if (options?.locale) {
+      params.locale = options.locale;
+    }
 
     if (options?.content_type) {
       params.content_type = options.content_type;
