@@ -12,20 +12,16 @@ export interface SystemMetadata<TypeName extends string = string> {
   id?: string | null;
   customId?: string | null;
   uuid?: string | null;
-  entryCreatedAt?: string | null;
-  entryVersion?: number | null;
-  environment?: EnvironmentEntry | EntryLink<"Environment"> | null;
-  firstPublishedAt?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  revision?: number | null;
   isPublished?: boolean | null;
-  locale?: LocaleEntry | EntryLink<"Locale"> | null;
-  localizationVersion?: number | null;
-  publishedAt?: string | null;
-  space?: SpaceEntry | EntryLink<"Space"> | null;
-  versionCreatedAt?: string | null;
+  locale?: string | null;
+  environment?: EntryLink<"Environment"> | null;
+  space?: EntryLink<"Space"> | null;
   versionId?: string | null;
   name?: string | null;
   slug?: string | null;
-  description?: string | null;
 }
 
 /**
@@ -99,23 +95,11 @@ export interface EntryLink<LinkType extends string = string> {
  */
 export interface EntrySystemMetadata<TypeName extends string = string> extends SystemMetadata<TypeName> {
   id: string;
-  entryCreatedAt: string;
-  entryVersion: number;
+  createdAt: string;
+  revision: number;
   isPublished: boolean;
-  versionCreatedAt: string;
+  updatedAt: string;
   versionId: string;
-}
-
-/**
- * EntrySystemMetadataWithSpace is used to define the system metadata for an entry with a space property.
- * This is used by all entry types except for the space type itself.
- *
- * @template TypeName The type of the entry. Must be one of the system types.
- */
-export interface EntrySystemMetadataWithSpace<TypeName extends string = string> extends EntrySystemMetadata<TypeName> {
-  environment: EnvironmentEntry;
-  locale: LocaleEntry;
-  space: SpaceEntry;
 }
 
 /**
@@ -175,11 +159,7 @@ export type EntryResponse<Type> = Type & { sys: SystemMetadata };
 export interface SpaceEntry extends Entry<"Space"> {
   id: string;
   uuid: string;
-
-  isPublished: boolean;
-
   name: string;
-
   featureConfig: FeatureConfig;
 }
 
@@ -195,9 +175,6 @@ export interface LocaleEntry extends Entry<"Locale"> {
   id: string;
   code: string;
   fallbackCode?: string | null;
-
-  isPublished: boolean;
-
   name: string;
 }
 
@@ -208,8 +185,6 @@ export interface ContentTypePropertyEntry extends Entry<"ContentTypeProperty"> {
   customId: string;
   id: string;
   machineName: string;
-
-  isPublished: boolean;
 
   type: string;
   isArray: boolean;
@@ -234,8 +209,6 @@ export interface ContentTypeEntry extends Entry<"ContentType"> {
   id: string;
   machineName: string;
 
-  isPublished: boolean;
-
   isAsset: boolean;
   isIndependent: boolean;
   isInline: boolean;
@@ -252,20 +225,20 @@ export interface ContentTypeEntry extends Entry<"ContentType"> {
  */
 export interface ContentEntry extends Entry<"Content"> {
   sys: EntrySystemMetadata<"Content"> & {
-    contentType: EntryLink<"ContentType"> | ContentTypeEntry;
+    contentType: EntryLink<"ContentType">;
   };
 
   fields: Record<string, any>;
 
-  tag?: TagEntry | null;
-  asset?: AssetEntry | null;
+  tagEntry?: TagEntry | null;
+  assetEntry?: AssetEntry | null;
 }
 
 /**
  * MimeTypeGroup is used to define the mime type group for assets.
  * Assets of type "image" are available through the Image API for optimization.
  */
-export enum MimeTypeGroup {
+export enum SystemMimeTypeGroup {
   Image = "image",
   Audio = "audio",
   Video = "video",
@@ -287,27 +260,28 @@ export enum MimeTypeGroup {
 export interface AssetEntry extends Entry<"Asset"> {
   id: string;
 
-  isPublished: boolean;
-
   fields: {
-    hash: string;
-    mimeType: string;
-    mimeTypeGroup: MimeTypeGroup;
-    size: number;
-    customVersionId?: string | null;
-    details?: {
-      image?: {
-        width: number;
-        height: number;
+    description?: string | null;
+    file: {
+      contentType: string;
+      details?: {
+        image?: {
+          gravity?: string | null;
+          height?: number | null;
+          width?: number | null;
+        } | null;
+        size: number;
       } | null;
-    } | null;
-    imageUrl?: string | null;
-    downloadUrl?: string | null;
-    embedUrl?: string | null;
-    fileName: string;
+      downloadUrl?: string | null;
+      embedUrl?: string | null;
+      fileName: string;
+      hash: string;
+      imageUrl?: string | null;
+      mimeTypeGroup: SystemMimeTypeGroup;
+      url?: string | null;
+    };
+    title: string;
   };
-
-  name: string;
 }
 
 /**
@@ -315,10 +289,8 @@ export interface AssetEntry extends Entry<"Asset"> {
  */
 export interface TagEntry extends Entry<"Tag"> {
   id: string;
-
-  isPublished: boolean;
-
   name: string;
+  description?: string;
 }
 
 /**
