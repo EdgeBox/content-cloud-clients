@@ -347,15 +347,28 @@ export class ContentCloudRestClient {
     // parse the token if it is provided to access the spaceId and environmentId
     this.token = this.options.accessToken && parseJwt(this.options.accessToken);
 
+    const scopes = Array.isArray(this.token.scope) ? this.token.scope : this.token.scope?.split(" ");
+
     // if the token is not provided, we need to set the spaceId and environmentId from the token
     if (!this.options.spaceId) {
       if (this.token.spaceId) {
         this.options.spaceId = this.token.spaceId;
+      } else {
+        const spaceScope = scopes?.find((c: string) => c.startsWith("space:"));
+        if (spaceScope) {
+          this.options.spaceId = spaceScope.substring("space:".length);
+        }
       }
     }
+
     if (!this.options.environmentId) {
       if (this.token.environmentIds?.length) {
         this.options.environmentId = this.token.environmentIds[0];
+      } else {
+        const environmentScopes = scopes?.find((c: string) => c.startsWith("environment:"));
+        if (environmentScopes?.length) {
+          this.options.environmentId = environmentScopes[0].substring("environment:".length);
+        }
       }
     }
 
@@ -382,7 +395,9 @@ export class ContentCloudRestClient {
     type: TypeName,
     data: ContentUserDataTypes[TypeName]["Update"],
   ): Promise<ContentUserDataTypes[TypeName]["Entry"]> {
-    return await this.system.post(`/entries/${contentId}/user_data/${type}`, { fields: data });
+    return await this.system.post(`/entries/${contentId}/user_data/${type}`, {
+      fields: data,
+    });
   }
 
   /**
