@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CollectionResponse, ContentCloudSystemRestClient } from "./content-cloud-system-rest-client";
-import { AnyIndependentEntry, ContentTypes, ContentUserDataTypes, Entry } from "./rest-schema";
+import { AnyIndependentEntry, ContentTypes, ContentUserDataTypes, Entry, EntryLink } from "./rest-schema";
 
 export type RestListResponse<ItemType extends object = AnyIndependentEntry> = CollectionResponse<ItemType>;
 
@@ -152,13 +152,6 @@ export type RestSelect<Entry extends Record<string, any> | null, Select extends 
           : RestSelect<NonNullable<NonNullable<Entry>[K0]>, Select, `${Prefix}${K0}.`>
         : never;
 };
-export type EntryLink = {
-  sys: {
-    type: "Link";
-    id: string;
-    linkType: string;
-  };
-};
 /*
  * If a subtype extends Entry, we change the typing to be either this type or an EntryLink.
  */
@@ -294,7 +287,7 @@ export class ContentCloudRestClient {
    * The data from the token to authenticate the client.
    * @protected
    */
-  protected readonly token: Record<string, any>;
+  protected readonly token?: Record<string, any>;
 
   /**
    * The space ID of the given JWT.
@@ -347,11 +340,11 @@ export class ContentCloudRestClient {
     // parse the token if it is provided to access the spaceId and environmentId
     this.token = this.options.accessToken && parseJwt(this.options.accessToken);
 
-    const scopes = Array.isArray(this.token.scope) ? this.token.scope : this.token.scope?.split(" ");
+    const scopes = Array.isArray(this.token?.scope) ? this.token.scope : this.token?.scope?.split(" ");
 
     // if the token is not provided, we need to set the spaceId and environmentId from the token
     if (!this.options.spaceId) {
-      if (this.token.spaceId) {
+      if (this.token?.spaceId) {
         this.options.spaceId = this.token.spaceId;
       } else {
         const spaceScope = scopes?.find((c: string) => c.startsWith("space:"));
@@ -362,7 +355,7 @@ export class ContentCloudRestClient {
     }
 
     if (!this.options.environmentId) {
-      if (this.token.environmentIds?.length) {
+      if (this.token?.environmentIds?.length) {
         this.options.environmentId = this.token.environmentIds[0];
       } else {
         const environmentScopes = scopes?.find((c: string) => c.startsWith("environment:"));
