@@ -48,7 +48,7 @@ export interface ContentCloudJwtPayload {
   // This will be used for the audience property. You can make it specific to
   // include the space + environment or keep it broader if you want to reuse
   // a token across different domains.
-  baseUrl: string;
+  baseUrl?: string;
 
   services: ContentCloudService[];
   permissions: ContentCloudPermission[];
@@ -80,6 +80,9 @@ export function generateAccessToken(payload: ContentCloudJwtPayload, ttlInSecond
   }
 
   const baseUrl = payload.baseUrl ?? process.env.CC_SATELLITE_BASE_URL ?? process.env.CC_BASE_URL;
+  if (!baseUrl) {
+    throw new Error(`baseUrl is missing.`);
+  }
 
   const externalPayload: JwtPayload & { scope: string[] } = {
     aud: `https://${new URL(baseUrl).hostname}`,
